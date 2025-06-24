@@ -87,31 +87,45 @@ def load_model():
 
             pipeline.text_encoder = convert_ldm_clip_checkpoint(dreambooth_state_dict).to("cuda")
         del dreambooth_state_dict
-        pipeline = pipeline.to(torch.float16)
+        # pipeline = pipeline.to(torch.float16)
+        pipeline = pipeline.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"), torch.float16)
+
         id_animator = FaceAdapterPlusForVideoLora(pipeline, image_encoder_path, id_ckpt, num_tokens=16,device=torch.device("cuda"),torch_type=torch.float16)
         return id_animator
 if __name__ == "__main__":
-    from insightface.app import FaceAnalysis
-    app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
-    app.prepare(ctx_id=0, det_size=(320, 320))
-    from insightface.utils import face_align
+    # from insightface.app import FaceAnalysis
+    # app = FaceAnalysis(name="buffalo_l", providers=['CUDAExecutionProvider', 'CPUExecutionProvider'])
+    # app.prepare(ctx_id=0, det_size=(320, 320))
+    # from insightface.utils import face_align
     import cv2
     from PIL import Image
     animator = load_model()
-    random_seed  = 4993
-    prompt = "Iron Man soars through the clouds, his repulsors blazing"
+    random_seed  = 4995
+    # prompt = "Iron Man soars through the clouds, his repulsors blazing"
+    # negative_prompt="semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime, text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
+    
+    prompt = (
+    "A mostly clean human palm with faint specks of soil or dirt lightly scattered across the surface. "
+    "Veins and fine palm prints remain clearly visible, though a small portion is subtly occluded by the soil. "
+    "The hand moves gently, tilting slightly up and down."
+    )   
     negative_prompt="semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime, text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck"
     
-    
-    
-    pil_image=[load_image("demos/lecun.png")]
-    img_path = "demos/lecun.png"
+    pil_image=[load_image(r"C:\Users\mobil\Desktop\25summer\GenPalm\palm2.png")]
+    img_path = r"C:\Users\mobil\Desktop\25summer\GenPalm\palm2.png"
     img = cv2.imread(img_path)
-    faces = app.get(img)
-    face_roi = face_align.norm_crop(img,faces[0]['kps'],112)
-    face_roi = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
-    pil_image = [Image.fromarray(face_roi).resize((224, 224))]
+    # faces = app.get(img)
+    # face_roi = face_align.norm_crop(img,faces[0]['kps'],112)
+    # face_roi = cv2.cvtColor(face_roi, cv2.COLOR_BGR2RGB)
+    # pil_image = [Image.fromarray(face_roi).resize((224, 224))]
+    pil_image = [Image.fromarray(img).resize((224, 224))]
     sample = animator.generate(pil_image, negative_prompt=negative_prompt,prompt=prompt,num_inference_steps = 30,seed=random_seed,
+    # guidance_scale      = 8,
+    #             width               = 512,
+    #             height              = 512,
+    #             video_length        = 16,
+    #             scale=0.8,
+    # )
     guidance_scale      = 8,
                 width               = 512,
                 height              = 512,
